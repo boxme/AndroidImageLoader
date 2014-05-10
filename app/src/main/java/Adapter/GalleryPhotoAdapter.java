@@ -88,7 +88,7 @@ public class GalleryPhotoAdapter extends BaseAdapter {
     }
 
     public void refreshFromServer() {
-        String url = "http://api.qanvast.com/api/photos?skip=0&limit=1000&latest=1";
+        String url = "http://api.qanvast.com/api/photos?skip=0&limit=200&latest=1";
         mAq.ajax(url, JSONArray.class, new AjaxCallback<JSONArray>() {
             @Override
             public void callback(String url, JSONArray object, AjaxStatus status) {
