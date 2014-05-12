@@ -1,4 +1,4 @@
-package BackgroundWork;
+package com.replaid.caarly.background;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -64,7 +64,7 @@ public abstract class ImageWorker {
      * If the image is found in the memory cache, it is set immediately.
      * Otherwise, AsyncTask created to asynchronously load the bitmap
      */
-    public void loadImage(Object data, ImageView imageView) {
+    public void loadImage(Object data, ImageView imageView, int loadingBitmapResId) {
         if (data == null) {return;}
 
         BitmapDrawable value = null;
@@ -78,9 +78,9 @@ public abstract class ImageWorker {
             imageView.setImageDrawable(value);
 
         } else if (cancelPotentialWork(data, imageView)) {
-            final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView);
+            final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView, loadingBitmapResId);
             final AsyncDrawable asyncDrawable =
-                    new AsyncDrawable(mResources, mLoadingBitmap, task);
+                    new AsyncDrawable(mResources, getBitmapFromResID(loadingBitmapResId), task);
             imageView.setImageDrawable(asyncDrawable);
 
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -90,7 +90,8 @@ public abstract class ImageWorker {
     /**
      * Load circular image
      */
-    public void loadCircularImage(Object data, ImageView imageView, int size, int borderWidth) {
+    public void loadCircularImage(Object data, ImageView imageView,
+                                  int size, int borderWidth, int loadingBitmapResId) {
         if (data == null) {return;}
 
         BitmapDrawable value = null;
@@ -104,9 +105,9 @@ public abstract class ImageWorker {
             imageView.setImageDrawable(value);
 
         } else if (cancelPotentialWork(data, imageView)) {
-            final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView, size, borderWidth);
+            final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView, size, borderWidth, loadingBitmapResId);
             final AsyncDrawable asyncDrawable =
-                    new AsyncDrawable(mResources, mLoadingBitmap, task);
+                    new AsyncDrawable(mResources, getBitmapFromResID(loadingBitmapResId), task);
             imageView.setImageDrawable(asyncDrawable);
 
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -117,8 +118,9 @@ public abstract class ImageWorker {
         mLoadingBitmap = bitmap;
     }
 
-    public void setLoadingImage(int resId) {
-        mLoadingBitmap = BitmapFactory.decodeResource(mResources, resId);
+
+    private Bitmap getBitmapFromResID(int resId) {
+        return BitmapFactory.decodeResource(mResources, resId);
     }
 
     /**
@@ -196,15 +198,19 @@ public abstract class ImageWorker {
      * Called when the processing is completed and the final drawable should be set
      * on the ImageView
      */
-    private void setImageDrawable(ImageView imageView, Drawable drawable) {
+    private void setImageDrawable(ImageView imageView, Drawable drawable, int loadingBitmapResId) {
         if (mFadeInBitmap) {
             //Transition drawable with a transparent drawable and the final drawable
             final TransitionDrawable td =
                     new TransitionDrawable(new Drawable[] {
                        new ColorDrawable(android.R.color.transparent), drawable
                     });
+
+            //LoadingBitmap
+            final Bitmap loadingBitmap = getBitmapFromResID(loadingBitmapResId);
+
             //Set background to loading bitmap
-            imageView.setBackgroundDrawable(new BitmapDrawable(mResources, mLoadingBitmap));
+            imageView.setBackgroundDrawable(new BitmapDrawable(mResources, loadingBitmap));
 
             imageView.setImageDrawable(td);
             td.startTransition(FADE_IN_TIME);
@@ -219,21 +225,23 @@ public abstract class ImageWorker {
     private class BitmapWorkerTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private Object mData;
         private boolean mIsCircular;
-        private int mCircleSize, mBorderWidth;
+        private int mCircleSize, mBorderWidth, mLoadingImageId;
         private final WeakReference<ImageView> imageViewReference;
 
-        public BitmapWorkerTask(Object data, ImageView imageView) {
+        public BitmapWorkerTask(Object data, ImageView imageView, int loadingImageId) {
             mData = data;
             mIsCircular = false;
+            mLoadingImageId = loadingImageId;
             imageViewReference = new WeakReference<ImageView>(imageView);
         }
 
-        public BitmapWorkerTask(Object data, ImageView imageView, int size, int borderWidth) {
+        public BitmapWorkerTask(Object data, ImageView imageView, int size, int borderWidth, int loadingImageId) {
             mData = data;
             mIsCircular = true;
             imageViewReference = new WeakReference<ImageView>(imageView);
             mCircleSize = size;
             mBorderWidth = borderWidth;
+            mLoadingImageId = loadingImageId;
         }
 
         @Override
@@ -303,7 +311,7 @@ public abstract class ImageWorker {
 
             final ImageView imageView = getAttachedImageView();
             if (value != null && imageView != null) {
-                setImageDrawable(imageView, value);
+                setImageDrawable(imageView, value, mLoadingImageId);
             }
         }
 

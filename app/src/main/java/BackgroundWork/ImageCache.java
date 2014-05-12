@@ -1,4 +1,4 @@
-package BackgroundWork;
+package com.replaid.caarly.background;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -60,7 +60,7 @@ public class ImageCache {
     private Set<SoftReference<Bitmap>> mReusableBitmaps;
 
     /**
-     * Return an {@link ImageCache} instance. A {@link RetainFragment} is used to retain the
+     * Return an {@link com.replaid.caarly.background.ImageCache} instance. A {@link com.replaid.caarly.background.ImageCache.RetainFragment} is used to retain the
      * ImageCache object across configuration changes such as a change in device orientation.
      */
     public static ImageCache getInstance(

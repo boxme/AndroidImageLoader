@@ -10,6 +10,7 @@ Modifications have been made to remove pre-existing bugs within the original cod
 - Included circular image. (as seen in google+ profile picture)
 - Changed to byte stream with the download as it gives a better performance.
 - Forced the customised RecyclingBitmapDrawable to be the default in use.
+- Binded placeholder loading image to each task so that the right loading image will be used.
 
 ### Usage Sample Code:
 Instantiation:
@@ -17,18 +18,14 @@ Instantiation:
     ImageFetcher imageLoader = new ImageFetcher(context);
 	ImageCacheParams cacheParams = new ImageCacheParams(context, <name of cache file>);
 	imageLoader.addImageCache(FragmentManager, cacheParams);
-
-Setting Default Image:
-	
-    imageLoader.setLoadingImage(drawable);
     
 Loading Normal Image:
 	
-    imageLoader.loadImage(url, imageView);
+    imageLoader.loadImage(url, imageView, placeholderDrawable);
     
 Loading Circular Image:
 	
-    imageLoader.loadCircularImage(url, imageview, size, borderSize);
+    imageLoader.loadCircularImage(url, imageview, size, borderSize, placeholderDrawable);
 
 Bookkeeping:
 

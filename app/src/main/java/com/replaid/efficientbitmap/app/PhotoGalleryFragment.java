@@ -3,12 +3,15 @@ package com.replaid.efficientbitmap.app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.GridView;
 
 import Adapter.GalleryPhotoAdapter;
@@ -16,11 +19,12 @@ import BackgroundWork.ImageCache;
 import BackgroundWork.ImageFetcher;
 
 public class PhotoGalleryFragment extends Fragment {
-    private static final String TAG = "Gallery";
+    private static final String TAG = "PhotoGalleryFragment";
     private GridView mGridView;
     private GalleryPhotoAdapter mAdapter;
     private ImageFetcher mImageLoader;
     private int mGridViewPosition;
+    private Bundle mSavedState;
 
     public static PhotoGalleryFragment newInstance() {
         PhotoGalleryFragment fragment = new PhotoGalleryFragment();
@@ -30,7 +34,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "Fragment onCreate");
+        Log.i(TAG, "PhotoGalleryFragment onCreate");
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
@@ -47,7 +51,7 @@ public class PhotoGalleryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
-        Log.i(TAG, "Fragment onCreateView");
+        Log.i(TAG, "PhotoGalleryFragment onCreateView");
         mGridView = (GridView) view.findViewById(R.id.gallery);
 
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -66,6 +70,20 @@ public class PhotoGalleryFragment extends Fragment {
             }
 
         });
+
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final String data = mAdapter.getData();
+                FragmentManager fm = ((FragmentActivity) getActivity()).getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+                ft.replace(R.id.fragment_container, ViewPagerPhotoFragment.newInstance(data, position),
+                           "photoViewPager");
+                ft.addToBackStack(null);
+                ft.commit();
+            }
+        });
+
         setupAdapter();
         return view;
     }
@@ -82,26 +100,34 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
+
+    /**
+     * onViewStateRestored is also guaranteed to be called, restore
+     * from your explicit state here.
+     */
     @Override
     public void onViewStateRestored(Bundle savedInstanceState) {
-        Log.i(TAG, "Fragment onViewStateRestored");
+        Log.i(TAG, "PhotoGalleryFragment onViewStateRestored");
         super.onViewStateRestored(savedInstanceState);
-        if (savedInstanceState != null) {
-            mGridViewPosition = savedInstanceState.getInt("position", 0);
+        if (mSavedState != null) {
+            mGridViewPosition = mSavedState.getInt("position", 0);
+            Log.i(TAG, "State is restored to " + mGridViewPosition);
         }
-        mGridView.smoothScrollToPosition(mGridViewPosition);
+
+        //This is not required for configuration changes
+//        mGridView.smoothScrollToPosition(mGridViewPosition);
     }
 
     @Override
     public void onResume() {
-        Log.i(TAG, "Fragment onResume");
+        Log.i(TAG, "PhotoGalleryFragment onResume");
         super.onResume();
         mImageLoader.setExitTasksEarly(false);
     }
 
     @Override
     public void onPause() {
-        Log.i(TAG, "Fragment onPause");
+        Log.i(TAG, "PhotoGalleryFragment onPause");
         super.onPause();
         mImageLoader.setPauseWork(false);
         mImageLoader.setExitTasksEarly(true);
@@ -110,33 +136,45 @@ public class PhotoGalleryFragment extends Fragment {
 
     @Override
     public void onAttach(Activity activity) {
-        Log.i(TAG, "Fragment onAttached");
+        Log.i(TAG, "PhotoGalleryFragment onAttached");
         super.onAttach(activity);
     }
 
     @Override
     public void onDetach() {
-        Log.i(TAG, "Fragment onDetached");
+        Log.i(TAG, "PhotoGalleryFragment onDetached");
         super.onDetach();
     }
 
+    /**
+     * onDestroyView is guaranteed to be called, save an explicit state
+     * here.
+     */
     @Override
     public void onDestroyView() {
-        Log.i(TAG, "Fragment onDestroyView");
+        Log.i(TAG, "PhotoGalleryFragment onDestroyView");
+        if (mSavedState == null) {
+            Log.i(TAG, "Create saved state");
+            mSavedState = new Bundle();
+        }
+        mGridViewPosition = mGridView.getFirstVisiblePosition();
+        mSavedState.putInt("position", mGridViewPosition);
+        Log.i(TAG, "position is " + mGridViewPosition);
         super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
-        Log.i(TAG, "Fragment onDestroy");
+        Log.i(TAG, "PhotoGalleryFragment onDestroy");
         super.onDestroy();
         mImageLoader.closeCache();
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mGridViewPosition = mGridView.getFirstVisiblePosition();
-        outState.putInt("position", mGridViewPosition);
-    }
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        Log.i(TAG, "fragment onSaveInstanceState");
+//        mGridViewPosition = mGridView.getFirstVisiblePosition();
+//        outState.putInt("position", mGridViewPosition);
+//    }
 }

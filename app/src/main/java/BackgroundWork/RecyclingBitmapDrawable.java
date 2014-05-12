@@ -1,4 +1,4 @@
-package BackgroundWork;
+package com.replaid.caarly.background;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;

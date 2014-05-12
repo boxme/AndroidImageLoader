@@ -104,6 +104,11 @@ public class GalleryPhotoAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public String getData() {
+        final String data = mData.toString();
+        return data;
+    }
+
     private class ViewHolder {
         public RecyclingImageView imageView;
     }
