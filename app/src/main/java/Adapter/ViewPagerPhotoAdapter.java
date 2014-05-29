@@ -7,12 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.replaid.efficientbitmap.app.R;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import BackgroundWork.ImageFetcher;
-import BackgroundWork.RecyclingImageView;
+import ImageLoaderPackage.ImageFetcher;
+import ImageLoaderPackage.RecyclingImageView;
 
 /**
  * Created by desmond on 11/5/14.
@@ -56,7 +58,7 @@ public class ViewPagerPhotoAdapter extends PagerAdapter {
             final JSONObject obj = mData.getJSONObject(position);
             final JSONObject image = obj.getJSONObject("image");
             final String url = image.getString("url");
-            mImageLoader.loadImage(url, imageView);
+            mImageLoader.loadImage(url, imageView, R.drawable.empty_photo);
 
         } catch (JSONException e) {}
 

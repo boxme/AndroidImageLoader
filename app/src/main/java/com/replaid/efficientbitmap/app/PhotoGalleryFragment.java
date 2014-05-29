@@ -15,8 +15,8 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import Adapter.GalleryPhotoAdapter;
-import BackgroundWork.ImageCache;
-import BackgroundWork.ImageFetcher;
+import ImageLoaderPackage.ImageCache;
+import ImageLoaderPackage.ImageFetcher;
 
 public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
@@ -42,7 +42,6 @@ public class PhotoGalleryFragment extends Fragment {
         mImageLoader = new ImageFetcher(getActivity());
         FragmentManager fm = getActivity().getSupportFragmentManager();
         mImageLoader.addImageCache(fm, cacheParams);
-        mImageLoader.setLoadingImage(R.drawable.empty_photo);
 
         mAdapter = new GalleryPhotoAdapter(getActivity(), mImageLoader);
     }

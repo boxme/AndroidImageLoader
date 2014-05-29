@@ -16,8 +16,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import Adapter.ViewPagerPhotoAdapter;
-import BackgroundWork.ImageCache;
-import BackgroundWork.ImageFetcher;
+import ImageLoaderPackage.ImageCache;
+import ImageLoaderPackage.ImageFetcher;
 
 
 /**

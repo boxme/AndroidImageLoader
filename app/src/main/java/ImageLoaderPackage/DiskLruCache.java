@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.replaid.caarly.background;
+package ImageLoaderPackage;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;

@@ -16,8 +16,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import BackgroundWork.ImageFetcher;
-import BackgroundWork.RecyclingImageView;
+import ImageLoaderPackage.ImageFetcher;
+import ImageLoaderPackage.RecyclingImageView;
 
 /**
  * Created by desmond on 9/5/14.
@@ -75,7 +75,7 @@ public class GalleryPhotoAdapter extends BaseAdapter {
             JSONObject obj = mData.getJSONObject(position);
             JSONObject image = obj.getJSONObject("image");
             String url = image.getString("url");
-            mImageLoader.loadImage(url, holder.imageView);
+            mImageLoader.loadImage(url, holder.imageView, R.drawable.empty_photo);
 
 //            if (position == 5) {
 //                mImageLoader.loadCircularImage(url, holder.imageView, 190, 2);

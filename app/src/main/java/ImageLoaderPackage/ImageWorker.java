@@ -1,4 +1,4 @@
-package com.replaid.caarly.background;
+package ImageLoaderPackage;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -359,7 +359,7 @@ public abstract class ImageWorker {
             borderPaint.setColor(Color.WHITE);
             borderPaint.setStrokeWidth(borderWidth);
             borderPaint.setAntiAlias(true);
-            radius -= (borderWidth / 2);
+            radius -= Math.ceil(borderWidth / 2.0);
             canvas.drawCircle(size/2, size/2, radius, borderPaint);
 
             return result;

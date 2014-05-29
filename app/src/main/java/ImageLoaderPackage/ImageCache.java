@@ -1,4 +1,4 @@
-package com.replaid.caarly.background;
+package ImageLoaderPackage;
 
 import android.annotation.TargetApi;
 import android.content.Context;

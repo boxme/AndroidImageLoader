@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.replaid.caarly.background;
+package ImageLoaderPackage;
 
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
@@ -66,6 +66,10 @@ public class BackgroundUtils {
 
     public static boolean hasHoneycombMR1() {
         return Build.VERSION.SDK_INT >= VERSION_CODES.HONEYCOMB_MR1;
+    }
+
+    public static boolean hasHoneycombMR2() {
+        return Build.VERSION.SDK_INT >= VERSION_CODES.HONEYCOMB_MR2;
     }
 
     public static boolean hasJellyBean() {

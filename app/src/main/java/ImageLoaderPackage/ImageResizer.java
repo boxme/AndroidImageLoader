@@ -1,9 +1,11 @@
-package com.replaid.caarly.background;
+package ImageLoaderPackage;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
@@ -56,10 +58,22 @@ public class ImageResizer extends ImageWorker {
     /**
      * Decode and sample down a bitmap from a byte stream
      */
+    @SuppressLint("NewApi")
     public static Bitmap decodeSampledBitmapFromByte(Context context, byte[] bitmapBytes, ImageCache cache) {
         Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        int reqWidth = display.getWidth();
-        int reqHeight = display.getHeight();
+        int reqWidth;
+        int reqHeight;
+
+        if (BackgroundUtils.hasHoneycombMR2()) {
+            Point outSize = new Point();
+            display.getSize(outSize);
+            reqWidth = outSize.x;
+            reqHeight = outSize.y;
+        } else {
+            reqWidth = display.getWidth();
+            reqHeight = display.getHeight();
+        }
+
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
@@ -132,6 +146,23 @@ public class ImageResizer extends ImageWorker {
         options.inInputShareable = true;
 
         return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    /**
+     * Decode and sample down a bitmap from a Uri path
+     */
+    public static Bitmap decodeSampledBitmapFromPath(String path, int reqWidth, int reqHeight) {
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, options);
+
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        options.inJustDecodeBounds = false;
+        options.inPurgeable = true;
+        options.inInputShareable = true;
+
+        return BitmapFactory.decodeFile(path, options);
     }
 
     private static void addInBitmapOptions(BitmapFactory.Options options, ImageCache cache) {
