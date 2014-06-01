@@ -60,7 +60,6 @@ public class ImageCache {
     private Set<SoftReference<Bitmap>> mReusableBitmaps;
 
     /**
-     * Return an {@link com.replaid.caarly.background.ImageCache} instance. A {@link com.replaid.caarly.background.ImageCache.RetainFragment} is used to retain the
      * ImageCache object across configuration changes such as a change in device orientation.
      */
     public static ImageCache getInstance(
@@ -147,7 +146,7 @@ public class ImageCache {
      * background thread.
      */
     public void initDiskCache() {
-        //Set up diskcache
+        //Set up DiskCache
         synchronized (mDiskCacheLock) {
             if (mDiskLruCache == null || mDiskLruCache.isClosed()) {
                 File diskCacheDir = mCacheParams.diskCacheDir;
@@ -531,6 +530,7 @@ public class ImageCache {
         if (BackgroundUtils.hasGingerbread()) {
             return path.getUsableSpace();
         }
+        //StatFs can retrieve overall info about the space on a filesystem
         final StatFs stats = new StatFs(path.getPath());
         return (long) stats.getBlockSize() * (long) stats.getAvailableBlocks();
     }

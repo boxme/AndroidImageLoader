@@ -76,7 +76,7 @@ public class ImageResizer extends ImageWorker {
 
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
+        options.inJustDecodeBounds = true;          //Query bitmap without allocating memory for its pixel
         BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length, options);
 
         //Calculate inSampleSize
@@ -84,8 +84,8 @@ public class ImageResizer extends ImageWorker {
 
         //Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
-        options.inPurgeable = true;
-        options.inInputShareable = true;
+        options.inPurgeable = true;          //If true, then the resulting bitmap will allocate its pixels such that they can be purged if the system needs to reclaim memory.
+        options.inInputShareable = true;    //If inPurgeable is true, then this field determines whether the bitmap can share a reference to the input data (inputStream, array, etc.) or if it must make a deep copy.
 
         if (BackgroundUtils.hasHoneycomb()) {
             addInBitmapOptions(options, cache);
@@ -135,15 +135,15 @@ public class ImageResizer extends ImageWorker {
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
 
 
-        // If we're running on Honeycomb or newer, try to use inBitmap
-        if (BackgroundUtils.hasHoneycomb()) {
-            addInBitmapOptions(options, cache);
-        }
-
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         options.inPurgeable = true;
         options.inInputShareable = true;
+
+        // If we're running on Honeycomb or newer, try to use inBitmap
+        if (BackgroundUtils.hasHoneycomb()) {
+            addInBitmapOptions(options, cache);
+        }
 
         return BitmapFactory.decodeResource(res, resId, options);
     }
@@ -151,7 +151,8 @@ public class ImageResizer extends ImageWorker {
     /**
      * Decode and sample down a bitmap from a Uri path
      */
-    public static Bitmap decodeSampledBitmapFromPath(String path, int reqWidth, int reqHeight) {
+    public static Bitmap decodeSampledBitmapFromPath(String path, int reqWidth, int reqHeight,
+                                                     ImageCache cache) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(path, options);
@@ -161,6 +162,11 @@ public class ImageResizer extends ImageWorker {
         options.inJustDecodeBounds = false;
         options.inPurgeable = true;
         options.inInputShareable = true;
+
+        // If we're running on Honeycomb or newer, try to use inBitmap
+        if (BackgroundUtils.hasHoneycomb()) {
+            addInBitmapOptions(options, cache);
+        }
 
         return BitmapFactory.decodeFile(path, options);
     }

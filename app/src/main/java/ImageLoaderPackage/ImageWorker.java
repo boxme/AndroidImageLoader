@@ -78,6 +78,7 @@ public abstract class ImageWorker {
             imageView.setImageDrawable(value);
 
         } else if (cancelPotentialWork(data, imageView)) {
+            //Create new workerTask and asyncDrawable to bind the imageView to its task
             final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView, loadingBitmapResId);
             final AsyncDrawable asyncDrawable =
                     new AsyncDrawable(mResources, getBitmapFromResID(loadingBitmapResId), task);
@@ -97,7 +98,7 @@ public abstract class ImageWorker {
         BitmapDrawable value = null;
 
         if (mImageCache != null) {
-            value = mImageCache.getBitmapFromMemCache(String.valueOf(data));
+            value = mImageCache.getBitmapFromMemCache(String.valueOf(data) + "/" + size + "/" + borderWidth);
         }
 
         if (value != null) {
@@ -138,7 +139,7 @@ public abstract class ImageWorker {
 
     public void setExitTasksEarly(boolean exitTasksEarly) {
         mExitTasksEarly = exitTasksEarly;
-        //Unpause all work before exiting to prevent paused threads from never finishing
+        //UnPause all work before exiting to prevent paused threads from never finishing
         setPauseWork(false);
     }
 
@@ -224,13 +225,14 @@ public abstract class ImageWorker {
      */
     private class BitmapWorkerTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private Object mData;
-        private boolean mIsCircular;
+        private boolean mIsCircular, mFoundInDiskCache;
         private int mCircleSize, mBorderWidth, mLoadingImageId;
         private final WeakReference<ImageView> imageViewReference;
 
         public BitmapWorkerTask(Object data, ImageView imageView, int loadingImageId) {
             mData = data;
             mIsCircular = false;
+            mFoundInDiskCache = false;
             mLoadingImageId = loadingImageId;
             imageViewReference = new WeakReference<ImageView>(imageView);
         }
@@ -238,6 +240,7 @@ public abstract class ImageWorker {
         public BitmapWorkerTask(Object data, ImageView imageView, int size, int borderWidth, int loadingImageId) {
             mData = data;
             mIsCircular = true;
+            mFoundInDiskCache = false;
             imageViewReference = new WeakReference<ImageView>(imageView);
             mCircleSize = size;
             mBorderWidth = borderWidth;
@@ -259,13 +262,14 @@ public abstract class ImageWorker {
                 }
             }
 
-            //If the imagecache is available & this task has not been cancelled by
+            //If the imageCache is available & this task has not been cancelled by
             //another thread and the imageView that was originally bound to this task
             //is still bound bck to this task & "exit early" flag is not set then try
             //and fetch the bitmap from the cache
             if (mImageCache != null && !isCancelled() && getAttachedImageView() != null
                     && !mExitTasksEarly) {
-                bitmap = mImageCache.getBitmapFromDiskCache(dataString);
+                bitmap = mImageCache.getBitmapFromDiskCache(dataString + (mIsCircular ? ("/" + mCircleSize + "/" + mBorderWidth): ""));
+                if (bitmap != null) mFoundInDiskCache = true;
             }
 
             //If the bitmap was not found in the cache and this task has not been cancelled by
@@ -284,14 +288,19 @@ public abstract class ImageWorker {
             //if it was, and the thread is still running, we may as well add the processed the bitmap to
             //our cache as it might be used again in the future
             if (bitmap != null) {
-                if (mIsCircular) {
+                if (mIsCircular && !mFoundInDiskCache) {
                     bitmap = getCircularBitmap(bitmap, mCircleSize, mCircleSize/2, mBorderWidth);
                 }
-                drawable = new RecyclingBitmapDrawable(mResources, bitmap);
+
+                if (BackgroundUtils.hasHoneycomb()) {
+                    drawable = new BitmapDrawable(mResources, bitmap);
+                } else {
+                    drawable = new RecyclingBitmapDrawable(mResources, bitmap);
+                }
 
                 //Save to cache
                 if (mImageCache != null) {
-                    mImageCache.addBitmapToCache(dataString, drawable);
+                    mImageCache.addBitmapToCache(dataString + (mIsCircular ? ("/" + mCircleSize + "/" + mBorderWidth): ""), drawable);
                 }
 
             } else {
@@ -301,7 +310,7 @@ public abstract class ImageWorker {
         }
 
         /**
-         * Once image is processed, associated it to the imageview
+         * Once image is processed, associated it to the imageView
          */
         @Override
         protected void onPostExecute(BitmapDrawable value) {
@@ -369,7 +378,8 @@ public abstract class ImageWorker {
     }
 
     /**
-     * Returns the imageview associated with this task as long as ImageView's task still
+     * Binds the BitmapDrawable with its WorkerTask.
+     * Returns the imageView associated with this task as long as ImageView's task still
      * points to this task as well.
      */
     private static class AsyncDrawable extends BitmapDrawable {
