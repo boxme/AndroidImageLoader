@@ -59,7 +59,7 @@ public class RecyclingBitmapDrawable extends BitmapDrawable {
         // has been displayed, then recycle
         if (mCacheRefCount <= 0 && mDisplayRefCount <= 0
                 && mHasBeenDisplayed && hasValidBitmap()) {
-            getBitmap().recycle();
+//            getBitmap().recycle();
         }
     }
 

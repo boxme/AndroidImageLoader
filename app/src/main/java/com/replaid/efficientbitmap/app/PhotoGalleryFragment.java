@@ -3,15 +3,12 @@ package com.replaid.efficientbitmap.app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.GridView;
 
 import Adapter.GalleryPhotoAdapter;
@@ -43,6 +40,7 @@ public class PhotoGalleryFragment extends Fragment {
         FragmentManager fm = getActivity().getSupportFragmentManager();
         mImageLoader.addImageCache(fm, cacheParams);
 
+//        PhotoManager.init(getActivity());
         mAdapter = new GalleryPhotoAdapter(getActivity(), mImageLoader);
     }
 
@@ -70,18 +68,18 @@ public class PhotoGalleryFragment extends Fragment {
 
         });
 
-        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final String data = mAdapter.getData();
-                FragmentManager fm = ((FragmentActivity) getActivity()).getSupportFragmentManager();
-                FragmentTransaction ft = fm.beginTransaction();
-                ft.replace(R.id.fragment_container, ViewPagerPhotoFragment.newInstance(data, position),
-                           "photoViewPager");
-                ft.addToBackStack(null);
-                ft.commit();
-            }
-        });
+//        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                final String data = mAdapter.getData();
+//                FragmentManager fm = ((FragmentActivity) getActivity()).getSupportFragmentManager();
+//                FragmentTransaction ft = fm.beginTransaction();
+//                ft.replace(R.id.fragment_container, ViewPagerPhotoFragment.newInstance(data, position),
+//                           "photoViewPager");
+//                ft.addToBackStack(null);
+//                ft.commit();
+//            }
+//        });
 
         setupAdapter();
         return view;
@@ -131,6 +129,7 @@ public class PhotoGalleryFragment extends Fragment {
         mImageLoader.setPauseWork(false);
         mImageLoader.setExitTasksEarly(true);
         mImageLoader.flushCache();
+//        PhotoManager.getInstance().clearCache();
     }
 
     @Override
@@ -167,6 +166,7 @@ public class PhotoGalleryFragment extends Fragment {
         Log.i(TAG, "PhotoGalleryFragment onDestroy");
         super.onDestroy();
         mImageLoader.closeCache();
+//        PhotoManager.getInstance().closeCache();
     }
 
 //    @Override

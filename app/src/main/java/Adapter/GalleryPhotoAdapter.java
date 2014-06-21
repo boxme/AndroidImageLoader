@@ -76,6 +76,7 @@ public class GalleryPhotoAdapter extends BaseAdapter {
             JSONObject image = obj.getJSONObject("image");
             String url = image.getString("url");
             mImageLoader.loadImage(url, holder.imageView, R.drawable.empty_photo);
+//            holder.imageView.setImageURL(url, true, null);
 
 //            if (position == 5) {
 //                mImageLoader.loadCircularImage(url, holder.imageView, 190, 2);
@@ -88,7 +89,7 @@ public class GalleryPhotoAdapter extends BaseAdapter {
     }
 
     public void refreshFromServer() {
-        String url = "http://api.qanvast.com/api/photos?skip=0&limit=200&latest=1";
+        String url = "http://api.qanvast.com/api/photos?skip=0&limit=500&latest=1";
         mAq.ajax(url, JSONArray.class, new AjaxCallback<JSONArray>() {
             @Override
             public void callback(String url, JSONArray object, AjaxStatus status) {

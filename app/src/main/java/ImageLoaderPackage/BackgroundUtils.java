@@ -26,7 +26,6 @@ import android.os.Build.VERSION_CODES;
 public class BackgroundUtils {
     private BackgroundUtils() {};
 
-
 //    @TargetApi(VERSION_CODES.HONEYCOMB)
 //    public static void enableStrictMode() {
 //        if (BackgroundUtils.hasGingerbread()) {

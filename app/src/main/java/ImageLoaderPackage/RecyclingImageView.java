@@ -41,10 +41,15 @@ public class RecyclingImageView extends ImageView {
     }
 
     private void notifyDrawable(Drawable drawable, final boolean isDisplayed) {
+
         if (drawable instanceof RecyclingBitmapDrawable) {
+
             ((RecyclingBitmapDrawable) drawable).setIsDisplayed(isDisplayed);
+
         } else if (drawable instanceof LayerDrawable) {
+
             LayerDrawable layerDrawable = (LayerDrawable) drawable;
+
             for (int i = 0, z = layerDrawable.getNumberOfLayers(); i < z; ++i) {
                 notifyDrawable(layerDrawable.getDrawable(i), isDisplayed);
             }

@@ -84,8 +84,6 @@ public class ImageResizer extends ImageWorker {
 
         //Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
-        options.inPurgeable = true;          //If true, then the resulting bitmap will allocate its pixels such that they can be purged if the system needs to reclaim memory.
-        options.inInputShareable = true;    //If inPurgeable is true, then this field determines whether the bitmap can share a reference to the input data (inputStream, array, etc.) or if it must make a deep copy.
 
         if (BackgroundUtils.hasHoneycomb()) {
             addInBitmapOptions(options, cache);
@@ -110,8 +108,6 @@ public class ImageResizer extends ImageWorker {
 
         //Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
-        options.inPurgeable = true;
-        options.inInputShareable = true;
 
         if (BackgroundUtils.hasHoneycomb()) {
             addInBitmapOptions(options, cache);
@@ -137,8 +133,6 @@ public class ImageResizer extends ImageWorker {
 
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
-        options.inPurgeable = true;
-        options.inInputShareable = true;
 
         // If we're running on Honeycomb or newer, try to use inBitmap
         if (BackgroundUtils.hasHoneycomb()) {
@@ -160,8 +154,6 @@ public class ImageResizer extends ImageWorker {
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
 
         options.inJustDecodeBounds = false;
-        options.inPurgeable = true;
-        options.inInputShareable = true;
 
         // If we're running on Honeycomb or newer, try to use inBitmap
         if (BackgroundUtils.hasHoneycomb()) {
@@ -181,6 +173,7 @@ public class ImageResizer extends ImageWorker {
             Bitmap inBitmap = cache.getBitmapFromReusableSet(options);
 
             if (inBitmap != null) {
+                Log.i(TAG, "Use inBitmap");
                 options.inBitmap = inBitmap;
             }
         }

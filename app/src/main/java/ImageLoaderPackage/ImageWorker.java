@@ -68,7 +68,6 @@ public abstract class ImageWorker {
         if (data == null) {return;}
 
         BitmapDrawable value = null;
-
         if (mImageCache != null) {
             value = mImageCache.getBitmapFromMemCache(String.valueOf(data));
         }
@@ -225,14 +224,13 @@ public abstract class ImageWorker {
      */
     private class BitmapWorkerTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private Object mData;
-        private boolean mIsCircular, mFoundInDiskCache;
+        private boolean mIsCircular;
         private int mCircleSize, mBorderWidth, mLoadingImageId;
         private final WeakReference<ImageView> imageViewReference;
 
         public BitmapWorkerTask(Object data, ImageView imageView, int loadingImageId) {
             mData = data;
             mIsCircular = false;
-            mFoundInDiskCache = false;
             mLoadingImageId = loadingImageId;
             imageViewReference = new WeakReference<ImageView>(imageView);
         }
@@ -240,7 +238,6 @@ public abstract class ImageWorker {
         public BitmapWorkerTask(Object data, ImageView imageView, int size, int borderWidth, int loadingImageId) {
             mData = data;
             mIsCircular = true;
-            mFoundInDiskCache = false;
             imageViewReference = new WeakReference<ImageView>(imageView);
             mCircleSize = size;
             mBorderWidth = borderWidth;
@@ -269,15 +266,12 @@ public abstract class ImageWorker {
             if (mImageCache != null && !isCancelled() && getAttachedImageView() != null
                     && !mExitTasksEarly) {
                 bitmap = mImageCache.getBitmapFromDiskCache(dataString + (mIsCircular ? ("/" + mCircleSize + "/" + mBorderWidth): ""));
-                if (bitmap != null) mFoundInDiskCache = true;
             }
 
             //If the bitmap was not found in the cache and this task has not been cancelled by
             //another thread and the ImageView that was originally bound to this task is still
             //bounded back to this task and "exit early" flag is not set, then call the main
             //process method
-            Log.i(TAG, dataString);
-
             if (bitmap == null && !isCancelled() && getAttachedImageView() != null
                     && !mExitTasksEarly) {
                 bitmap = processBitmap(mData);
@@ -288,7 +282,7 @@ public abstract class ImageWorker {
             //if it was, and the thread is still running, we may as well add the processed the bitmap to
             //our cache as it might be used again in the future
             if (bitmap != null) {
-                if (mIsCircular && !mFoundInDiskCache) {
+                if (mIsCircular) {
                     bitmap = getCircularBitmap(bitmap, mCircleSize, mCircleSize/2, mBorderWidth);
                 }
 

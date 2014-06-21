@@ -56,6 +56,7 @@ public class ImageCache {
     private LruCache<String, BitmapDrawable> mMemoryCache;
     private ImageCacheParams mCacheParams;
     private final Object mDiskCacheLock = new Object();
+    private final Object mMemCacheLock = new Object();
     private boolean mDiskCacheStarting = true;
     private Set<SoftReference<Bitmap>> mReusableBitmaps;
 
@@ -118,7 +119,7 @@ public class ImageCache {
                         if (BackgroundUtils.hasHoneycomb()) {
                             // We're running on Honeycomb or later, so add the bitmap
                             // to a SoftReference set for possible use with inBitmap later
-                            mReusableBitmaps.add(new SoftReference<Bitmap>(oldValue.getBitmap()));
+                            addBitmapIntoReusableSet(oldValue.getBitmap());
                         }
                     }
                 }
@@ -126,7 +127,8 @@ public class ImageCache {
                 @Override
                 protected int sizeOf(String key, BitmapDrawable value) {
                     final int bitmapSize = getBitmapSize(value) / 1024;
-                    return bitmapSize == 0 ? 1 : bitmapSize;
+//                    return bitmapSize == 0 ? 1 : bitmapSize;
+                    return  bitmapSize;
                 }
             };
         }
@@ -189,6 +191,7 @@ public class ImageCache {
         }
 
         synchronized (mDiskCacheLock) {
+
             //Add to disk cache
             if (mDiskLruCache != null) {
                 final String key = hashKeyforDisk(data);
@@ -228,13 +231,11 @@ public class ImageCache {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     public BitmapDrawable getBitmapFromMemCache(String data) {
         BitmapDrawable memValue = null;
+
         if (mMemoryCache != null) {
             memValue = mMemoryCache.get(data);
         }
 
-        if (memValue != null) {
-            Log.i(TAG, "Bitmap found in memory cache");
-        }
         return memValue;
     }
 
@@ -284,8 +285,19 @@ public class ImageCache {
         }
     }
 
+    protected void addBitmapIntoReusableSet(final Bitmap bitmap) {
+        if (mReusableBitmaps != null) {
+            synchronized (mReusableBitmaps) {
+                if (bitmap != null) {
+                    mReusableBitmaps.add(new SoftReference<Bitmap>(bitmap));
+                }
+            }
+        }
+    }
+
     protected Bitmap getBitmapFromReusableSet(BitmapFactory.Options options) {
         Bitmap bitmap = null;
+
         if (mReusableBitmaps != null && !mReusableBitmaps.isEmpty()) {
             synchronized (mReusableBitmaps) {
                 final Iterator<SoftReference<Bitmap>> iterator = mReusableBitmaps.iterator();
@@ -407,7 +419,8 @@ public class ImageCache {
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    private static boolean canUseForInBitmap(Bitmap candidate, BitmapFactory.Options targetOptions) {
+    private static boolean canUseForInBitmap(final Bitmap candidate, BitmapFactory.Options targetOptions) {
+
         if (!BackgroundUtils.hasKitKat()) {
             //On earlier versions, the dimensions must match exactly and the inSampleSize must be 1
             return candidate.getWidth() == targetOptions.outWidth
