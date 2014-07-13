@@ -1,10 +1,17 @@
 package BackgroundThreads;
 
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.util.Queue;
@@ -17,6 +24,7 @@ import java.util.concurrent.TimeUnit;
  * Created by desmond on 20/6/14.
  */
 public class PhotoManager {
+    private static final String TAG = "PhotoManager";
     /**
      * Status indicator
      */
@@ -42,6 +50,8 @@ public class PhotoManager {
 
     //Sets the maximum ThreadPool size to 8
     private static final int MAXIMUM_POOL_SIZE = 8;
+
+    private static final int FADE_IN_TIME = 400;
 
     /**
      * NOTE: This is the number of total available cores. On current versions of
@@ -72,6 +82,9 @@ public class PhotoManager {
     //A single instance of PhotoManager, used to implement the singleton pattern
     private static PhotoManager sInstance = null;
 
+    //A resource
+    private static Resources mResources = null;
+
     //A static block that sets class fields
     static  {
         // The time unit for "keep alive" is in seconds
@@ -91,6 +104,7 @@ public class PhotoManager {
     public static void init(FragmentActivity activity) {
         if (sInstance == null) {
             sInstance = new PhotoManager(activity);
+            mResources = activity.getResources();
         }
     }
 
@@ -109,8 +123,8 @@ public class PhotoManager {
         );
 
         mDecodeThreadPool = new ThreadPoolExecutor(
-                CORE_POOL_SIZE,
-                MAXIMUM_POOL_SIZE,
+                NUMBER_OF_CORES,
+                NUMBER_OF_CORES,
                 KEEP_ALIVE_TIME,
                 KEEP_ALIVE_TIME_UNIT,
                 mDecodeWorkQueue
@@ -155,7 +169,9 @@ public class PhotoManager {
                          * to the bitmap in the incoming message
                          */
                         case TASK_COMPLETE:
+
                             imageView.setImageBitmap(photoTask.getImage());
+                            setImageDrawable(imageView, photoTask.getImage());
                             recycleTask(photoTask);
                             break;
 
@@ -185,14 +201,9 @@ public class PhotoManager {
             //Task finished downloading and decoding the image
             case TASK_COMPLETE:
 
-                //Puts the image into cache
-//                if (photoTask.isCacheEnabled()) {
-//                    //If the task is set to cache the results, put the buffer
-//                    //that was successfully decoded into the cache
-//                    mImageCache.addByteToCache(photoTask.getImageURL(), photoTask.getByteBuffer());
-//                }
-
                 //Gets a Message object, stores the state in it, and sends it to the Handler
+                //Handler.obtainMessage() will set the message to be sent to this Handler
+
                 Message completeMessage = mHandler.obtainMessage(state, photoTask);
                 completeMessage.sendToTarget();
                 break;
@@ -212,7 +223,8 @@ public class PhotoManager {
         }
     }
 
-    static public PhotoTask startDownload(ImageView imageView, String url, boolean cacherFlag) {
+    static public PhotoTask startDownload(ImageView imageView, String url,
+                                          boolean cacherFlag) {
 
         PhotoTask downloadTask = sInstance.mPhotoTaskWorkQueue.poll();
 
@@ -220,7 +232,8 @@ public class PhotoManager {
             downloadTask = new PhotoTask();
         }
 
-        downloadTask.initializeDownloaderTask(PhotoManager.sInstance, imageView, cacherFlag, url);
+        downloadTask.initializeDownloaderTask(PhotoManager.sInstance, imageView,
+                                                cacherFlag, url);
 
         downloadTask.setByteBuffer(sInstance.mImageCache.getByteFromMemCache(url));
 
@@ -230,7 +243,7 @@ public class PhotoManager {
             sInstance.mDownloadThreadPool.execute(downloadTask.getPhotoDownloadRunnable());
 
         } else {
-
+            Log.i(TAG, "found in memory cache");
             sInstance.handleState(downloadTask, DOWNLOAD_COMPLETE);
 
         }
@@ -299,6 +312,17 @@ public class PhotoManager {
         }
     }
 
+    private void setImageDrawable(ImageView imageView, Bitmap decodeBitmap) {
+        BitmapDrawable drawable = new BitmapDrawable(mResources, decodeBitmap);
+
+        final TransitionDrawable td =
+                new TransitionDrawable(new Drawable[] {
+                     new ColorDrawable(android.R.color.transparent), drawable
+                });
+
+        imageView.setImageDrawable(td);
+        td.startTransition(FADE_IN_TIME);
+    }
 
     /**
      * Recycles tasks by calling their internal recycle() method and then putting them back into

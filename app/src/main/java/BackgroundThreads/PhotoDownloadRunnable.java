@@ -1,6 +1,7 @@
 package BackgroundThreads;
 
 import android.os.Process;
+import android.util.Log;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -57,6 +58,7 @@ public class PhotoDownloadRunnable implements Runnable {
             }
 
             ImageCache imageCache = null;
+
             //Search from Disk cache
             if (byteBuffer == null) {
                 imageCache = mPhotoTask.getImageCache();
@@ -64,6 +66,10 @@ public class PhotoDownloadRunnable implements Runnable {
                 if (imageCache != null) {
                     byteBuffer = imageCache.getByteFromDiskCache(mPhotoTask.getImageURL());
                 }
+            }
+
+            if (byteBuffer != null) {
+                Log.i(TAG, "Found in Disk Cache");
             }
 
             //Download
@@ -166,6 +172,7 @@ public class PhotoDownloadRunnable implements Runnable {
 
                     //Save to cache
                     if (imageCache != null) {
+                        Log.i(TAG, "Download completed and saving to cache");
                         imageCache.addByteToCache(mPhotoTask.getImageURL(), byteBuffer);
                     }
 

@@ -69,8 +69,6 @@ public class PhotoDecodeRunnable implements Runnable {
             }
 
             bitmapOptions.inJustDecodeBounds = false;
-            bitmapOptions.inPurgeable = true;
-            bitmapOptions.inInputShareable = true;
 
             for (int i = 0; i < NUMBER_OF_DECODE_TRIES; ++i) {
 

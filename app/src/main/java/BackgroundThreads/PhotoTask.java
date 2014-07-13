@@ -36,8 +36,8 @@ public class PhotoTask implements PhotoDecodeRunnable.TaskRunnableDecodeMethods,
         mDownloadRunnable = new PhotoDownloadRunnable(this);
     }
 
-    void initializeDownloaderTask(
-            PhotoManager photoManager, ImageView photoView, boolean cacherFlag, String url) {
+    void initializeDownloaderTask(PhotoManager photoManager, ImageView photoView,
+                                  boolean cacherFlag, String url) {
 
         sPhotoManager = photoManager;
         mImageUrl = url;

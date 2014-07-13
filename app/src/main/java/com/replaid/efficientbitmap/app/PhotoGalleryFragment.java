@@ -3,7 +3,6 @@ package com.replaid.efficientbitmap.app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,7 @@ import android.widget.AbsListView;
 import android.widget.GridView;
 
 import Adapter.GalleryPhotoAdapter;
-import ImageLoaderPackage.ImageCache;
+import BackgroundThreads.PhotoManager;
 import ImageLoaderPackage.ImageFetcher;
 
 public class PhotoGalleryFragment extends Fragment {
@@ -35,12 +34,11 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        ImageCache.ImageCacheParams cacheParams = new ImageCache.ImageCacheParams(getActivity(), "cache");
-        mImageLoader = new ImageFetcher(getActivity());
-        FragmentManager fm = getActivity().getSupportFragmentManager();
-        mImageLoader.addImageCache(fm, cacheParams);
+//        ImageCache.ImageCacheParams cacheParams = new ImageCache.ImageCacheParams(getActivity(), "cache");
+//        mImageLoader = new ImageFetcher(getActivity());
+//        FragmentManager fm = getActivity().getSupportFragmentManager();
+//        mImageLoader.addImageCache(fm, cacheParams);
 
-//        PhotoManager.init(getActivity());
         mAdapter = new GalleryPhotoAdapter(getActivity(), mImageLoader);
     }
 
@@ -55,11 +53,11 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 //Pause fetcher to ensure smoother scrolling when flinging
-                if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING) {
-                    mImageLoader.setPauseWork(true);
-                } else {
-                    mImageLoader.setPauseWork(false);
-                }
+//                if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING) {
+//                    mImageLoader.setPauseWork(true);
+//                } else {
+//                    mImageLoader.setPauseWork(false);
+//                }
             }
 
             @Override
@@ -67,6 +65,8 @@ public class PhotoGalleryFragment extends Fragment {
             }
 
         });
+
+        PhotoManager.init(getActivity());
 
 //        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 //            @Override
@@ -119,17 +119,17 @@ public class PhotoGalleryFragment extends Fragment {
     public void onResume() {
         Log.i(TAG, "PhotoGalleryFragment onResume");
         super.onResume();
-        mImageLoader.setExitTasksEarly(false);
+//        mImageLoader.setExitTasksEarly(false);
     }
 
     @Override
     public void onPause() {
         Log.i(TAG, "PhotoGalleryFragment onPause");
         super.onPause();
-        mImageLoader.setPauseWork(false);
-        mImageLoader.setExitTasksEarly(true);
-        mImageLoader.flushCache();
-//        PhotoManager.getInstance().clearCache();
+//        mImageLoader.setPauseWork(false);
+//        mImageLoader.setExitTasksEarly(true);
+//        mImageLoader.flushCache();
+        PhotoManager.getInstance().clearCache();
     }
 
     @Override
@@ -165,8 +165,8 @@ public class PhotoGalleryFragment extends Fragment {
     public void onDestroy() {
         Log.i(TAG, "PhotoGalleryFragment onDestroy");
         super.onDestroy();
-        mImageLoader.closeCache();
-//        PhotoManager.getInstance().closeCache();
+//        mImageLoader.closeCache();
+        PhotoManager.getInstance().closeCache();
     }
 
 //    @Override

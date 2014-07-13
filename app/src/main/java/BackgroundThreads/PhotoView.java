@@ -265,7 +265,8 @@ public class PhotoView extends ImageView {
      * @param cacheFlag Whether to use caching when doing downloading and decoding
      * @param imageDrawable The Drawable to use for this ImageView
      */
-    public void setImageURL(String pictureUrl, boolean cacheFlag, Drawable imageDrawable) {
+    public void setImageURL(String pictureUrl, boolean cacheFlag,
+                            Drawable imageDrawable) {
 
         //If the picture URL for this ImageView is already set
         if (mImageURL != null) {

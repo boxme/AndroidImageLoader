@@ -1,6 +1,7 @@
 package Adapter;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,8 +17,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import BackgroundThreads.PhotoView;
 import ImageLoaderPackage.ImageFetcher;
-import ImageLoaderPackage.RecyclingImageView;
 
 /**
  * Created by desmond on 9/5/14.
@@ -25,14 +26,14 @@ import ImageLoaderPackage.RecyclingImageView;
 public class GalleryPhotoAdapter extends BaseAdapter {
     private static final String TAG = "GalleryPhotoAdapter";
     private AQuery mAq;
-    private ImageFetcher mImageLoader;
+//    private ImageFetcher mImageLoader;
     private Context ctx;
     private JSONArray mData;
 
     public GalleryPhotoAdapter(Context context, ImageFetcher imageLoader) {
         ctx = context;
         mAq = new AQuery(context);
-        mImageLoader = imageLoader;
+//        mImageLoader = imageLoader;
     }
 
     @Override
@@ -66,7 +67,7 @@ public class GalleryPhotoAdapter extends BaseAdapter {
             convertView = ((LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
                                                .inflate(R.layout.gallery_photo, parent, false);
             holder = new ViewHolder();
-            holder.imageView = (RecyclingImageView) convertView.findViewById(R.id.photo);
+            holder.imageView = (PhotoView) convertView.findViewById(R.id.photo);
             convertView.setTag(holder);
         }
 
@@ -75,8 +76,9 @@ public class GalleryPhotoAdapter extends BaseAdapter {
             JSONObject obj = mData.getJSONObject(position);
             JSONObject image = obj.getJSONObject("image");
             String url = image.getString("url");
-            mImageLoader.loadImage(url, holder.imageView, R.drawable.empty_photo);
-//            holder.imageView.setImageURL(url, true, null);
+//            mImageLoader.loadImage(url, holder.imageView, R.drawable.empty_photo);
+            Drawable drawable = ctx.getResources().getDrawable(R.drawable.empty_photo);
+            holder.imageView.setImageURL(url, true, drawable);
 
 //            if (position == 5) {
 //                mImageLoader.loadCircularImage(url, holder.imageView, 190, 2);
@@ -111,6 +113,7 @@ public class GalleryPhotoAdapter extends BaseAdapter {
     }
 
     private class ViewHolder {
-        public RecyclingImageView imageView;
+//        public RecyclingImageView imageView;
+        public PhotoView imageView;
     }
 }

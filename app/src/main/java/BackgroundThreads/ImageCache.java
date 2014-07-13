@@ -20,8 +20,7 @@ import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
+import java.util.zip.Inflater;
 
 import ImageLoaderPackage.BackgroundUtils;
 
@@ -85,6 +84,7 @@ public class ImageCache  {
      * @param cacheParams
      */
     private ImageCache(ImageCacheParams cacheParams) {
+        Log.i(TAG, "trying to load memory cache");
         init(cacheParams);
     }
 
@@ -101,7 +101,8 @@ public class ImageCache  {
 
                 @Override
                 protected int sizeOf(String key, byte[] value) {
-                    return value.length;
+                    final int size = value.length / 1024;
+                    return size;
                 }
             };
         }
@@ -147,7 +148,6 @@ public class ImageCache  {
 
         //Add to memory cache
         if (mMemoryCache != null) {
-            Log.i(TAG, "Add to memory cache");
             mMemoryCache.put(data, value);
         }
 
@@ -156,8 +156,8 @@ public class ImageCache  {
             if (mDiskLruCache != null) {
                 final String key = hashKeyforDisk(data);
                 OutputStream out = null;
-                Deflater deflater = new Deflater();
-                DeflaterOutputStream deflaterOutputStream = null;
+                Deflater deflater = null;
+
                 try {
                     DiskLruCache.Snapshot snapshot = mDiskLruCache.get(key);
                     if (snapshot == null) {
@@ -167,15 +167,21 @@ public class ImageCache  {
                         if (editor != null) {
                             out = editor.newOutputStream(DISK_CACHE_INDEX);
 
-                            deflaterOutputStream = new DeflaterOutputStream(out, deflater);
+                            deflater = new Deflater();
+                            deflater.setInput(value);
+                            deflater.finish();
 
-                            int byteRead = value.length;
-                            deflaterOutputStream.write(value, 0, byteRead);
+                            int byteRead;
+                            byte[] bufferArray = new byte[value.length];
+
+                            while (!deflater.finished()) {
+                                byteRead = deflater.deflate(bufferArray);
+                                out.write(bufferArray, 0, byteRead);
+                            }
 
                             editor.commit();
-                            out.close();
-                            deflaterOutputStream.close();
                             deflater.end();
+                            out.close();
                         }
 
                     } else {
@@ -197,10 +203,6 @@ public class ImageCache  {
                             deflater.end();
                         }
 
-                        if (deflaterOutputStream != null) {
-                            deflaterOutputStream.close();
-                        }
-
                     } catch (Exception e) {}
                 }
             }
@@ -217,10 +219,6 @@ public class ImageCache  {
             result = mMemoryCache.get(data);
         }
 
-        if (result != null) {
-            Log.i(TAG, "Found in memory cache");
-        }
-
         return result;
     }
 
@@ -230,6 +228,7 @@ public class ImageCache  {
     public byte[] getByteFromDiskCache(String data) {
         final String key = hashKeyforDisk(data);
         byte[] result = null;
+
 
         synchronized (mDiskCacheLock) {
             while (mDiskCacheStarting) {
@@ -241,32 +240,65 @@ public class ImageCache  {
 
         if (mDiskCacheLock != null) {
             InputStream inputStream = null;
-            InflaterInputStream inflaterInputStream = null;
-            ByteArrayOutputStream byteArrayOutputStream = null;
+            Inflater inflater = null;
+            ByteArrayOutputStream outputStream = null;
+
             try {
                 final DiskLruCache.Snapshot snapshot = mDiskLruCache.get(key);
                 if (snapshot != null) {
-                    Log.i(TAG, "Found in Disk Cache");
-
                     inputStream = snapshot.getInputStream(DISK_CACHE_INDEX);
 
+                    /**
+                     * Error here
+                     */
                     if (inputStream != null) {
-                        inflaterInputStream = new InflaterInputStream(inputStream);
 
-                        byteArrayOutputStream = new ByteArrayOutputStream(READ_SIZE);
+                        byte[] tempBuffer = new byte[READ_SIZE];
 
-                        int byteRead;
-                        byte[] buffer = new byte[READ_SIZE];
-                        while ((byteRead = inputStream.read(buffer)) > 0) {
-                            byteArrayOutputStream.write(buffer, 0, byteRead);
-                        }
+                        int bufferLeft = tempBuffer.length;
+                        int bufferOffset = 0;
+                        int readResult = 0;
+
+                        outer: do {
+
+                            while (bufferLeft > 0) {
+                                readResult = inputStream.read(tempBuffer, bufferOffset, bufferLeft);
+
+                                if (readResult < 0)
+                                    break outer;
+
+                                bufferOffset += readResult;
+                                bufferLeft -= readResult;
+
+                            }
+
+                            bufferLeft = READ_SIZE;
+                            int newSize = tempBuffer.length + READ_SIZE;
+                            byte[] expandedBuffer = new byte[newSize];
+                            System.arraycopy(tempBuffer, 0, expandedBuffer, 0, tempBuffer.length);
+                            tempBuffer = expandedBuffer;
+
+                        } while (true);
 
                         inputStream.close();
-                        byteArrayOutputStream.close();
-                        result = byteArrayOutputStream.toByteArray();
+
+                        inflater = new Inflater();
+                        inflater.setInput(tempBuffer);
+                        outputStream = new ByteArrayOutputStream(bufferOffset);
+
+                        tempBuffer = new byte[1024];
+
+                        while (!inflater.finished()) {
+                            readResult = inflater.inflate(tempBuffer);
+                            outputStream.write(tempBuffer, 0, readResult);
+                        }
+
+                        outputStream.close();
+                        result = outputStream.toByteArray();
+                        inflater.end();
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.i(TAG, "getByteFromDiskCache - " + e);
             } finally {
                 try {
@@ -274,11 +306,11 @@ public class ImageCache  {
                     if (inputStream != null)
                         inputStream.close();
 
-                    if (inflaterInputStream != null)
-                        inputStream.close();
+                    if (outputStream != null)
+                        outputStream.close();
 
-                    if (byteArrayOutputStream != null)
-                        byteArrayOutputStream.close();
+                    if (inflater != null)
+                        inflater.end();
 
                 } catch (IOException e) {}
             }

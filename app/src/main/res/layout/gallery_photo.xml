@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ImageLoaderPackage.RecyclingImageView
+<!--<ImageLoaderPackage.RecyclingImageView-->
+    <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--android:id="@+id/photo"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="190dp"-->
+    <!--android:scaleType="fitXY"-->
+    <!--android:src="@drawable/empty_photo">-->
+
+<!--</ImageLoaderPackage.RecyclingImageView>-->
+
+<BackgroundThreads.PhotoView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/photo"
     android:layout_width="match_parent"
     android:layout_height="190dp"
     android:scaleType="fitXY"
     android:src="@drawable/empty_photo">
-
-</ImageLoaderPackage.RecyclingImageView>
+</BackgroundThreads.PhotoView>
